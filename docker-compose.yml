@@ -1,0 +1,33 @@
+services:
+  robo-transparencia:
+    build: .
+    container_name: robo-transparencia
+    ports:
+      - "8000:8000"
+    environment:
+      HEADLESS: "true"
+      MAX_CONCURRENT_SCRAPES: "4"
+      NAV_TIMEOUT_MS: "30000"
+      QUERY_TIMEOUT_MS: "60000"
+      # A hiperautomação chama a própria API por HTTP; dentro do container
+      # ela escuta em 0.0.0.0:8000, então localhost:8000 já resolve.
+      ROBO_API_BASE_URL: "http://localhost:8000"
+      # --- Parte 2 ---
+      # "local" (padrão) grava em storage/ sem precisar de credenciais.
+      # Troque para "google" e preencha as três variáveis abaixo para usar
+      # o Drive/Sheets reais (ver README > Parte 2 para o passo a passo).
+      GOOGLE_INTEGRATION_MODE: "local"
+      GOOGLE_CREDENTIALS_PATH: ""
+      GOOGLE_DRIVE_FOLDER_ID: ""
+      GOOGLE_SHEETS_ID: ""
+    volumes:
+      # Persiste o resultado do modo "local" (Drive/Sheets simulados) fora
+      # do container. Se for usar o modo "google", monte aqui também o JSON
+      # da service account e ajuste GOOGLE_CREDENTIALS_PATH de acordo.
+      - ./storage:/app/storage
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

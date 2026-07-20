@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.env
+.pytest_cache/
+.mypy_cache/
+*.png
+!docs/*.png
+.DS_Store
+
+# Configurações locais do Claude Code (específicas da máquina/sessão)
+.claude/
+
+# Parte 2: dados do modo local (Drive/Sheets simulados) — pode conter dados
+# pessoais reais coletados do Portal da Transparência em demonstrações.
+storage/

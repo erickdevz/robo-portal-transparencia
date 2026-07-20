@@ -1,0 +1,17 @@
+# --- API ---
+fastapi==0.139.2
+uvicorn[standard]==0.51.0
+pydantic==2.13.4
+pydantic-settings==2.14.2
+httpx==0.28.1
+
+# --- Automação Web ---
+playwright==1.61.0
+
+# --- Parte 2: Hiperautomação (Google Drive + Sheets) ---
+google-api-python-client==2.198.0
+google-auth==2.56.0
+
+# --- Testes ---
+pytest==9.1.1
+pytest-asyncio==1.4.0

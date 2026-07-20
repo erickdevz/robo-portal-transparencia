@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Robô Portal da Transparência</title>
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Robô Portal da Transparência</h1>
+      <p class="subtitle">Descubra o que o Governo Federal tem registrado sobre uma pessoa</p>
+    </header>
+
+    <form id="form-consulta" class="card">
+      <div class="field">
+        <label for="termo">Nome, CPF ou NIS da pessoa</label>
+        <input
+          type="text" id="termo" name="termo" required minlength="2"
+          placeholder="Ex.: Maria da Silva ou 111.111.111-11"
+          autocomplete="off"
+        >
+        <p class="field-hint">
+          Pode digitar o nome completo ou o número do CPF/NIS, com ou sem pontuação.
+        </p>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="tipo">Tipo de busca</label>
+          <select id="tipo" name="tipo">
+            <option value="auto" selected>Detectar automaticamente</option>
+            <option value="nome">Nome</option>
+            <option value="cpf">CPF</option>
+            <option value="nis">NIS</option>
+          </select>
+        </div>
+
+        <div class="field field-checkbox">
+          <label>
+            <input type="checkbox" id="filtro_programa_social">
+            Buscar só quem recebe benefício social
+          </label>
+          <p class="field-hint checkbox-hint">Ex.: Bolsa Família, Auxílio Emergencial.</p>
+        </div>
+      </div>
+
+      <div class="field field-checkbox">
+        <label>
+          <input type="checkbox" id="salvar_drive">
+          Salvar uma cópia automaticamente no Google Drive e numa planilha
+        </label>
+        <p class="field-hint checkbox-hint">
+          Além de mostrar o resultado aqui, guarda um arquivo para consulta futura.
+        </p>
+      </div>
+
+      <button type="submit" id="btn-consultar">Consultar</button>
+    </form>
+
+    <div id="status" class="status" hidden>
+      <p id="status-titulo" class="status-titulo"></p>
+      <p id="status-detalhe" class="status-detalhe" hidden></p>
+      <details id="status-tecnico" class="status-tecnico" hidden>
+        <summary>Ver detalhe técnico</summary>
+        <p id="status-tecnico-texto"></p>
+      </details>
+    </div>
+
+    <div id="loading" class="loading" hidden>
+      <div class="spinner" aria-hidden="true"></div>
+      <p>Consultando o Portal da Transparência... isso pode levar até 1 minuto.</p>
+    </div>
+
+    <section id="resultado" class="resultado" hidden>
+      <div class="card" id="card-dados">
+        <h2>Dados encontrados</h2>
+        <p id="dados-hint" class="hint" hidden></p>
+        <dl class="dados-grid" id="dados-grid"></dl>
+      </div>
+
+      <div class="card" id="card-beneficios" hidden>
+        <h2>Benefícios sociais</h2>
+        <div id="beneficios-lista"></div>
+      </div>
+
+      <div class="card" id="card-drive" hidden>
+        <h2>Cópia salva automaticamente</h2>
+        <dl class="dados-grid" id="drive-grid"></dl>
+      </div>
+
+      <div class="card" id="card-evidencia">
+        <h2>Print da consulta (evidência)</h2>
+        <img id="evidencia-img" alt="Print da tela consultada no Portal da Transparência">
+      </div>
+
+      <details class="card">
+        <summary>Ver dados técnicos (JSON)</summary>
+        <p class="field-hint">Formato usado por desenvolvedores para integrar com esta API.</p>
+        <pre id="json-raw"></pre>
+      </details>
+    </section>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
