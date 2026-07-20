@@ -29,8 +29,6 @@ from playwright.async_api import TimeoutError as PWTimeoutError
 
 from .browser import browser_manager
 from .config import Selectors, settings
-
-logger = logging.getLogger(__name__)
 from .exceptions import ScraperError, SemResultadosError, TempoRespostaError
 from .models import (
     Beneficio,
@@ -41,6 +39,8 @@ from .models import (
     TipoBusca,
 )
 from .utils import detectar_tipo, novo_identificador, termo_de_busca
+
+logger = logging.getLogger(__name__)
 
 # Mapeia o "slug" da URL de detalhe do benefício para um nome amigável.
 BENEFICIO_SLUGS = {
@@ -83,19 +83,36 @@ async def _clicar_seletores(page: Page, seletores: list[str], timeout: int = 400
     return False
 
 
-def _pares(texto: str) -> dict[str, str]:
-    """
-    Converte o texto de um bloco '.dados-tabelados' em pares rótulo->valor.
+# JS executado no navegador para extrair pares rótulo/valor de um bloco
+# '.dados-tabelados': cada campo é um container com um <b>/<strong> (rótulo,
+# a marcação varia entre o panorama e as telas de detalhe de benefício)
+# seguido do valor (texto restante do container). Ler pela estrutura do DOM —
+# e não por posição de linha de texto — evita desalinhar os pares quando um
+# campo vem vazio (ex.: NIS em branco), que some da lista ao invés de virar
+# uma linha vazia.
+_JS_EXTRAIR_PARES = """
+el => Array.from(el.querySelectorAll('b, strong')).map(rotulo => {
+    const clone = rotulo.parentElement.cloneNode(true);
+    const rotuloClone = clone.querySelector('b, strong');
+    if (rotuloClone) rotuloClone.remove();
+    return [rotulo.textContent.trim(), clone.textContent.trim()];
+})
+"""
 
-    O portal renderiza rótulo e valor em linhas consecutivas
-    (ex.: 'Nome' / 'MARIA...'), então basta emparelhar linhas não vazias.
-    """
-    linhas = [ln.strip() for ln in texto.splitlines() if ln.strip()]
+
+async def _pares(bloco: Locator) -> dict[str, str]:
+    """Converte um bloco '.dados-tabelados' em pares rótulo->valor, pela estrutura do DOM."""
+    try:
+        pares = await bloco.evaluate(_JS_EXTRAIR_PARES)
+    except PWTimeoutError:
+        return {}
     dados: dict[str, str] = {}
-    for i in range(0, len(linhas) - 1, 2):
-        rotulo, valor = linhas[i], linhas[i + 1]
-        if rotulo and valor and rotulo not in dados:
-            dados[rotulo] = valor
+    for rotulo, valor in pares:
+        # \xad é um hífen de quebra de linha invisível que o portal insere
+        # em algumas palavras (ex.: "Benefí\xadcio") — não faz parte do texto.
+        rotulo = rotulo.strip().replace("\xad", "")
+        if rotulo and rotulo not in dados:
+            dados[rotulo] = valor.strip().replace("\xad", "")
     return dados
 
 
@@ -131,6 +148,23 @@ async def _aguardar_resultados(page: Page, timeout_ms: int) -> bool:
         await page.wait_for_timeout(400)
 
     raise PWTimeoutError("Timeout aguardando resultados da busca")
+
+
+def _parse_contador(texto: str) -> int | None:
+    """Converte '10.000' (formato BR, separador de milhar) em 10000."""
+    limpo = texto.strip().replace(".", "").replace(",", "")
+    return int(limpo) if limpo.isdigit() else None
+
+
+async def _contar_resultados(page: Page) -> int | None:
+    """Lê quantos resultados a busca encontrou (ex.: 10.000 para 'maria')."""
+    contador = await _primeiro_visivel(page, Selectors.CONTADOR_RESULTADOS)
+    if contador is None:
+        return None
+    try:
+        return _parse_contador(await contador.inner_text())
+    except PWTimeoutError:
+        return None
 
 
 async def _expandir_accordion(page: Page) -> None:
@@ -190,7 +224,7 @@ async def _detalhar_beneficio(ctx: BrowserContext, url: str, tipo: str) -> Benef
         await _dispensar_cookies(page)
         bloco = await _primeiro_visivel(page, Selectors.PANORAMA_DADOS)
         if bloco is not None:
-            detalhes = _pares(await bloco.inner_text())
+            detalhes = await _pares(bloco)
     except Exception:
         pass
     finally:
@@ -236,7 +270,7 @@ async def _extrair_dados(ctx: BrowserContext, page: Page) -> DadosPessoa:
 
     bloco = await _primeiro_visivel(page, Selectors.PANORAMA_DADOS)
     if bloco is not None:
-        pares = _pares(await bloco.inner_text())
+        pares = await _pares(bloco)
         dados.nome = pares.get("Nome")
         dados.cpf = pares.get("CPF")
         dados.nis = pares.get("NIS")
@@ -282,6 +316,8 @@ async def _executar(ctx: BrowserContext, req: ConsultaRequest) -> tuple[DadosPes
             raise SemResultadosError(req.termo)
         raise TempoRespostaError()
 
+    total_resultados = await _contar_resultados(page)
+
     # 2) abre o primeiro resultado
     item = await _primeiro_visivel(page, Selectors.RESULTADO_ITEM)
     if item is None:
@@ -302,6 +338,7 @@ async def _executar(ctx: BrowserContext, req: ConsultaRequest) -> tuple[DadosPes
 
     # 4) coleta dados + evidência (screenshot após expandir as seções)
     dados = await _extrair_dados(ctx, page)
+    dados.total_resultados_encontrados = total_resultados
     evidencia = await _screenshot_base64(page)
     return dados, evidencia
 

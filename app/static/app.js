@@ -12,6 +12,7 @@ const resultadoEl = document.getElementById("resultado");
 const cardDados = document.getElementById("card-dados");
 const dadosGrid = document.getElementById("dados-grid");
 const dadosHint = document.getElementById("dados-hint");
+const dadosAmbiguidade = document.getElementById("dados-ambiguidade");
 const cardBeneficios = document.getElementById("card-beneficios");
 const beneficiosLista = document.getElementById("beneficios-lista");
 const cardDrive = document.getElementById("card-drive");
@@ -133,6 +134,7 @@ function renderResultado(data, viaHiperautomacao) {
     showStatusErro(data.explicacao || MENSAGEM_ERRO_GENERICO, data.mensagem_erro);
     show(resultadoEl);
     hide(cardDados);
+    hide(dadosAmbiguidade);
     hide(cardBeneficios);
     hide(cardDrive);
     hide(cardEvidencia);
@@ -163,6 +165,7 @@ function renderResultado(data, viaHiperautomacao) {
       'Desmarque "Salvar uma cópia automaticamente" para ver os dados completos e o print aqui na tela.';
     show(dadosHint);
     hide(dadosGrid);
+    hide(dadosAmbiguidade);
 
     hide(cardBeneficios);
     hide(cardEvidencia);
@@ -175,6 +178,19 @@ function renderResultado(data, viaHiperautomacao) {
   show(dadosGrid);
 
   const dados = data.dados || {};
+
+  const totalEncontrado = dados.total_resultados_encontrados;
+  if (totalEncontrado && totalEncontrado > 1) {
+    const totalFormatado = totalEncontrado.toLocaleString("pt-BR");
+    dadosAmbiguidade.textContent =
+      `Encontramos ${totalFormatado} pessoas com esse termo — mostrando a primeira ` +
+      "da lista. Para ter certeza de que é a pessoa certa, busque pelo nome " +
+      "completo ou pelo CPF/NIS.";
+    show(dadosAmbiguidade);
+  } else {
+    hide(dadosAmbiguidade);
+  }
+
   addDado(dadosGrid, "Nome", dados.nome);
   addDado(dadosGrid, "CPF", dados.cpf);
   addDado(dadosGrid, "NIS", dados.nis);

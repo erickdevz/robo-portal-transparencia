@@ -12,6 +12,9 @@
   --error-bg: #fdecec;
   --error-text: #a11919;
   --error-border: #f3c2c2;
+  --warning-bg: #fff6e0;
+  --warning-text: #8a5a00;
+  --warning-border: #f0dca0;
   --radius: 10px;
   --shadow: 0 1px 2px rgba(16, 24, 32, 0.04), 0 1px 8px rgba(16, 24, 32, 0.04);
 }
@@ -31,6 +34,9 @@
     --error-bg: #3a1616;
     --error-text: #f18b8b;
     --error-border: #5c2424;
+    --warning-bg: #3a2e0a;
+    --warning-text: #f0c454;
+    --warning-border: #5c4a14;
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 1px 8px rgba(0, 0, 0, 0.2);
   }
 }
@@ -306,6 +312,16 @@ button:disabled {
   color: var(--text-muted);
   font-size: 0.9rem;
   margin: 0;
+}
+
+.aviso-ambiguidade {
+  background: var(--warning-bg);
+  color: var(--warning-text);
+  border: 1px solid var(--warning-border);
+  border-radius: 8px;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.85rem;
+  margin: 0 0 1rem;
 }
 
 #evidencia-img {

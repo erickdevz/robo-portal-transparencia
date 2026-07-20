@@ -73,6 +73,13 @@ cenários de teste disponível num "Ver detalhe técnico" colapsável:
 
 <img src="docs/frontend-erro.png" alt="Mensagem de erro amigável, com detalhe técnico colapsável" width="560">
 
+Nomes genéricos (ex.: só "Maria") podem casar com milhares de pessoas no
+portal — o robô sempre segue o primeiro resultado (conforme o cenário de
+sucesso por nome do desafio), mas a tela avisa quando isso acontece, para não
+passar a falsa impressão de que aquela é a única pessoa com aquele nome:
+
+<img src="docs/frontend-ambiguidade.png" alt="Aviso de ambiguidade quando a busca encontra muitas pessoas" width="560">
+
 É um front-end estático (`app/static/`, HTML/CSS/JS sem build step),
 servido pela própria API via `StaticFiles` — não há servidor nem processo
 adicional para rodar.
@@ -110,7 +117,8 @@ Resposta (sempre HTTP 200; o campo `status` diferencia sucesso/erro):
     "secoes": { "RECEBIMENTOS DE RECURSOS": "..." },
     "beneficios": [
       { "tipo": "Bolsa Família", "detalhes": { "NIS": "1.354.153.937-1", "...": "..." } }
-    ]
+    ],
+    "total_resultados_encontrados": 11
   },
   "evidencia_base64": "iVBORw0KGgoAAAANSUhEUg...",
   "mensagem_erro": null,
@@ -127,6 +135,12 @@ Dois campos descrevem o erro, para públicos diferentes:
 - `explicacao`: a mesma informação em linguagem simples, pensada para
   exibição a um usuário leigo (é o que a interface web mostra em destaque;
   `mensagem_erro` fica disponível num "Ver detalhe técnico" colapsável).
+
+`dados.total_resultados_encontrados` informa quantas pessoas a busca
+encontrou no total — buscas por nomes comuns (ex.: "Maria") podem retornar
+milhares. O robô sempre coleta o **primeiro** resultado da lista (conforme o
+cenário de sucesso por nome do desafio); esse campo existe para deixar essa
+ambiguidade explícita, em vez de escondê-la.
 
 Exemplo via `curl`:
 

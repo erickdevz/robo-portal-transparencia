@@ -72,6 +72,15 @@ class DadosPessoa(BaseModel):
     # portal exibir mesmo que o layout mude.
     secoes: dict[str, Any] = Field(default_factory=dict)
     beneficios: list[Beneficio] = Field(default_factory=list)
+    total_resultados_encontrados: int | None = Field(
+        default=None,
+        description=(
+            "Quantas pessoas a busca encontrou no total (ex.: buscar só "
+            "'Maria' pode achar milhares). Os dados abaixo são sempre do "
+            "primeiro resultado da lista — se vier maior que 1, considere "
+            "buscar por nome completo ou CPF/NIS para maior precisão."
+        ),
+    )
 
 
 class ConsultaResponse(BaseModel):
