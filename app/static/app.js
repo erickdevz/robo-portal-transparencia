@@ -20,11 +20,43 @@ const driveGrid = document.getElementById("drive-grid");
 const cardEvidencia = document.getElementById("card-evidencia");
 const evidenciaImg = document.getElementById("evidencia-img");
 const jsonRaw = document.getElementById("json-raw");
+const cardJson = document.getElementById("card-json");
+
+const apiStatusEl = document.getElementById("api-status");
+const apiStatusTexto = document.getElementById("api-status-texto");
 
 const MENSAGEM_CONEXAO_FALHOU =
   "Não conseguimos falar com o servidor. Verifique se a API está rodando e tente novamente.";
 const MENSAGEM_ERRO_GENERICO =
   "Não foi possível concluir a consulta. Tente novamente em instantes.";
+
+/** Anima a entrada de elementos com a classe .reveal (fade + slide-up). */
+function revealIn(el) {
+  el.hidden = false;
+  el.classList.remove("is-visible");
+  void el.offsetWidth; // força reflow para o navegador registrar o estado inicial
+  requestAnimationFrame(() => el.classList.add("is-visible"));
+}
+
+// Revela o cabeçalho e o formulário assim que a página carrega. Cards de
+// resultado (ainda ocultos por [hidden] neste momento) ganham a mesma
+// animação depois, quando renderResultado() os exibir pela primeira vez.
+document.querySelectorAll(".reveal").forEach((el) => {
+  if (!el.hidden) requestAnimationFrame(() => el.classList.add("is-visible"));
+});
+
+async function checarSaudeApi() {
+  try {
+    const resp = await fetch("/health");
+    if (!resp.ok) throw new Error("offline");
+    apiStatusTexto.textContent = "API online";
+    apiStatusEl.classList.remove("offline");
+  } catch {
+    apiStatusTexto.textContent = "API indisponível";
+    apiStatusEl.classList.add("offline");
+  }
+}
+checarSaudeApi();
 
 form.addEventListener("submit", async (ev) => {
   ev.preventDefault();
@@ -129,6 +161,7 @@ function showStatusErro(titulo, detalheTecnico) {
 
 function renderResultado(data, viaHiperautomacao) {
   jsonRaw.textContent = JSON.stringify(data, null, 2);
+  revealIn(cardJson);
 
   if (data.status !== "sucesso") {
     showStatusErro(data.explicacao || MENSAGEM_ERRO_GENERICO, data.mensagem_erro);
@@ -143,13 +176,13 @@ function renderResultado(data, viaHiperautomacao) {
 
   showStatusSucesso(viaHiperautomacao, data.identificador_unico);
   show(resultadoEl);
-  show(cardDados);
+  revealIn(cardDados);
   dadosGrid.innerHTML = "";
 
   if (viaHiperautomacao) {
     // Resposta do fluxo da Parte 2 (HiperautomacaoResponse): não traz os
     // dados completos da pessoa, só o resultado do armazenamento.
-    show(cardDrive);
+    revealIn(cardDrive);
     driveGrid.innerHTML = "";
     addDado(driveGrid, "Código da consulta", data.identificador_unico);
     addDado(driveGrid, "Arquivo salvo", data.nome_arquivo_drive);
@@ -173,7 +206,7 @@ function renderResultado(data, viaHiperautomacao) {
   }
 
   hide(cardDrive);
-  show(cardEvidencia);
+  revealIn(cardEvidencia);
   hide(dadosHint);
   show(dadosGrid);
 
@@ -198,7 +231,7 @@ function renderResultado(data, viaHiperautomacao) {
 
   const beneficios = dados.beneficios || [];
   if (beneficios.length) {
-    show(cardBeneficios);
+    revealIn(cardBeneficios);
     beneficiosLista.innerHTML = "";
     beneficios.forEach((b) => beneficiosLista.appendChild(renderBeneficio(b)));
   } else {
